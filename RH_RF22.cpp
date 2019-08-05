@@ -109,6 +109,12 @@ bool RH_RF22::init()
 	return false;
     }
 
+    // Issue software reset to get all registers to default state
+    spiWrite(RH_RF22_REG_07_OPERATING_MODE1, RH_RF22_SWRES);
+    // Wait for chip ready
+    while (!(spiRead(RH_RF22_REG_04_INTERRUPT_STATUS2) & RH_RF22_ICHIPRDY))
+	;
+    
     // Add by Adrien van den Bossche <vandenbo@univ-tlse2.fr> for Teensy
     // ARM M4 requires the below. else pin interrupt doesn't work properly.
     // On all other platforms, its innocuous, belt and braces

@@ -144,9 +144,16 @@ Or you can use any Driver with any of the Managers described below.
 
 We welcome contributions of well tested and well documented code to support other transports.
 
+If your radio or transciever is not on the list above, there is a good chance it
+wont work without modifying RadioHead to suit it.  If you wish for
+support for another radio or transciever, and you send 2 of them to
+AirSpayce Pty Ltd, we will consider adding support for it.
+
 \par Managers
 
-The following Managers are provided:
+The drivers above all provide for unaddressed, unreliable, variable
+length messages, but if you need more than that, the following
+Managers are provided:
 
 - RHDatagram
 Addressed, unreliable variable length messages, with optional broadcast facilities.
@@ -156,7 +163,7 @@ Addressed, reliable, retransmitted, acknowledged variable length messages.
 
 - RHRouter
 Multi-hop delivery of RHReliableDatagrams from source node to destination node via 0 or more
-intermediate nodes, with manual routing.
+intermediate nodes, with manual, pre-programmed routing.
 
 - RHMesh
 Multi-hop delivery of RHReliableDatagrams with automatic route discovery and rediscovery.
@@ -165,7 +172,7 @@ Any Manager may be used with any Driver.
 
 \par Platforms
 
-A range of platforms is supported:
+A range of processors and platforms are supported:
 
 - Arduino and the Arduino IDE (version 1.0 to 1.8.1 and later)
 Including Diecimila, Uno, Mega, Leonardo, Yun, Due, Zero etc. http://arduino.cc/, Also similar boards such as 
@@ -205,9 +212,12 @@ http://leaflabs.com/devices/maple/ and http://www.open-drone.org/flymaple
   but can be used to control other SPI based radios, Serial ports etc.
   See below for details on how to build RadioHead for Photon
 
-- ATtiny built using Arduino IDE 1.0.5 with the arduino-tiny support from https://code.google.com/p/arduino-tiny/
-  and Digispark built with Arduino 1.6.5.
+- ATTiny built using Arduino IDE 1.8 and the ATTiny core from 
+  https://raw.githubusercontent.com/damellis/attiny/ide-1.6.x-boards-manager/package_damellis_attiny_index.json
+  using the instructions at
+  https://medium.com/jungletronics/attiny85-easy-flashing-through-arduino-b5f896c48189
   (Caution: these are very small processors and not all RadioHead features may be available, depending on memory requirements)
+  (Caution: we have not had good success building RH_ASK sketches for ATTiny 85  with SpenceKonde ATTinyCore)
 
 - nRF51 compatible Arm chips such as nRF51822 with Arduino 1.6.4 and later using the procedures
   in http://redbearlab.com/getting-started-nrf51822/
@@ -234,11 +244,16 @@ https://www.adafruit.com/product/3406
 - Linux and OSX
   Using the RHutil/HardwareSerial class, the RH_Serial driver and any manager will
   build and run on Linux and OSX. These can be used to build programs that talk securely and reliably to
-  Arduino and other processors or to other Linux or OSX hosts on a reliable, error detected datagram
+  Arduino and other processors or to other Linux or OSX hosts on a reliable, error detected (and possibly encrypted) datagram
   protocol over various types of serial line.
 
 Other platforms are partially supported, such as Generic AVR 8 bit processors, MSP430. 
 We welcome contributions that will expand the range of supported platforms. 
+
+If your processor is not on the list above, there is a good chance it
+wont work without modifying RadioHead to suit it.  If you wish for
+support for another processor, and you send 2 of them to
+AirSpayce Pty Ltd, we will consider adding support for it.
 
 RadioHead is available (through the efforts of others) 
 for PlatformIO. PlatformIO is a cross-platform code builder and the missing library manager.
@@ -858,6 +873,33 @@ application. To purchase a commercial license, contact info@airspayce.com
 	     behind the end of the route array. Reported by Pascal Gillès de Pélichy.<br>
 \version 1.86 2018-08-28
              Update commercial licensing, remove binpress.
+\version 1.87 2018-10-06
+             RH_RF22 now resets all registers to default state before initialisation commences. Suggested by Wothke.<br>
+	     Added RH_ENABLE_EXPLICIT_RETRY_DEDUP which improves the handling of duplicate detection especiually
+	     in the case where a transmitter periodically wakes up and start tranmitting from the first sequence number.
+	     Patch courtesy Justin Newitter. Thanks.
+\version 1.88 2018-11-13
+             Updated to support ATTiny using instructions in
+             https://medium.com/jungletronics/attiny85-easy-flashing-through-arduino-b5f896c48189
+	     Updated examples ask_transmitter and ask_receiver to compile cleanly on ATTiny. 
+	     Tested using ATTiny85 and Arduino 1.8.1. <br>
+\version 1.89 2018-11-15
+             Testing with ATTiny core from https://github.com/SpenceKonde/ATTinyCore and RH_ASK, 
+	     using example ask_transmitter. This resulted in 'Low Memory, instability may occur', 
+             and the resulting sketch would transmit only one packet. Suggest ATTiny users do not use this core, but use 
+	     the one from https://raw.githubusercontent.com/damellis/attiny/ide-1.6.x-boards-manager/package_damellis_attiny_index.json 
+	     as described in https://medium.com/jungletronics/attiny85-easy-flashing-through-arduino-b5f896c48189 <br>
+	     Added support for RH_RF95::setSpreadingFactor(), RH_RF95::setSignalBandwidth(), RH_RF95::setLowDatarate() and
+	     RH_RF95::setPayloadCRC(). Patch from Brian Norman. Thanks.<br>
+
+\version 1.90 2019-05-21
+             Fixed a block size error in RhEncryptedDriver for the case when
+             using STRICT_CONTENT_LEN and sending messages of exactly _blockcipher.blockSize() bytes in length.
+	     Reported and patched by Philippe Rochat.
+             Patch from Samuel Archibald to prevent compile errors with RH_AAK.cpp fo ATSAMD51.
+	     Fixed a probem in RH_RF69::setSyncWords that prevented setSyncWords(NULL, 0) correctly
+	     disabling sync detection and generation. Reported by Federico Maggi.
+	     RHHardwareSPI::usingInterrupt() was a noop. Fixed to call SPI.usingInterrupt(interrupt);.
 
 \author  Mike McCauley. DO NOT CONTACT THE AUTHOR DIRECTLY. USE THE GOOGLE LIST GIVEN ABOVE
 */
@@ -1106,7 +1148,7 @@ these examples and explanations and extend them to suit your needs.
 
 // Official version numbers are maintained automatically by Makefile:
 #define RH_VERSION_MAJOR 1
-#define RH_VERSION_MINOR 86
+#define RH_VERSION_MINOR 89
 
 // Symbolic names for currently supported platform types
 #define RH_PLATFORM_ARDUINO          1
@@ -1163,7 +1205,7 @@ these examples and explanations and extend them to suit your needs.
  #endif
 #endif
 
-#if defined(__AVR_ATtiny84__) || defined(__AVR_ATtiny85__) || defined(__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtinyX4__) || defined(__AVR_ATtinyX5__) || defined(__AVR_ATtiny2313__) || defined(__AVR_ATtiny4313__) || defined(__AVR_ATtinyX313__)
+#if defined(__AVR_ATtiny84__) || defined(__AVR_ATtiny85__) || defined(__AVR_ATtiny24__) || defined(__AVR_ATtiny44__) || defined(__AVR_ATtiny45__) || defined(__AVR_ATtinyX4__) || defined(__AVR_ATtinyX5__) || defined(__AVR_ATtiny2313__) || defined(__AVR_ATtiny4313__) || defined(__AVR_ATtinyX313__) || defined(ARDUINO_attiny)
  #define RH_PLATFORM_ATTINY
 #endif
 

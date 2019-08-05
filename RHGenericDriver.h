@@ -7,6 +7,7 @@
 #define RHGenericDriver_h
 
 #include <RadioHead.h>
+#include "pt.h"
 
 // Defines bits of the FLAGS header reserved for use by the RadioHead library and 
 // the flags available for use by applications
@@ -16,6 +17,10 @@
 
 // Default timeout for waitCAD() in ms
 #define RH_CAD_DEFAULT_TIMEOUT            10000
+
+int sensorAnalysis(struct pt*);
+int receiving(struct pt*);
+int sendData(struct pt*);
 
 /////////////////////////////////////////////////////////////////////
 /// \class RHGenericDriver RHGenericDriver.h <RHGenericDriver.h>

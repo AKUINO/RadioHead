@@ -84,10 +84,35 @@ bool RHGenericDriver::waitCAD()
     {
          if (millis() - t > _cad_timeout) 
 	     return false;
-#if (RH_PLATFORM == RH_PLATFORM_STM32) // stdlib on STMF103 gets confused if random is redefined
+/*#if (RH_PLATFORM == RH_PLATFORM_STM32) // stdlib on STMF103 gets confused if random is redefined
 	 delay(_random(1, 10) * 100);
 #else
          delay(random(1, 10) * 100); // Should these values be configurable? Macros?
+#endif*/
+
+#if (RH_PLATFORM == RH_PLATFORM_STM32)
+     static struct pt sensorAnalysisPT;
+     int randDelay = _random(1, 10) * 100;
+     int start = millis();
+     while (millis() < (start + randDelay)) {
+        sensorAnalysis(&sensorAnalysisPT);
+     }
+#elif (RH_PLATFORM == RH_PLATFORM_ESP32)
+     static struct pt receivingPT,sendDataPT;
+     int randDelay = random(1, 10) * 100;
+     int start = millis();
+     while (millis() < (start + randDelay)) {
+        receiving(&receivingPT);
+        sendData(&sendDataPT);
+     }
+#else
+         static struct pt sensorAnalysisPT;
+         int randDelay = random(1, 10) * 100;
+         int start = millis();
+         while (millis() < (start + randDelay)) {
+             sensorAnalysis(&sensorAnalysisPT);
+             Serial.println(RH_PLATFORM_STM32);
+         }
 #endif
     }
 
